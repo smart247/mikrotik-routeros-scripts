@@ -1,0 +1,38 @@
+################################################################################
+# Title:  Put and update domains IP to Firewall addresses list
+# Author: Sergej Sevrjuk
+# Date:   2019-10-01
+################################################################################
+
+:local domainNames {"admin1.ddns.net"; "admin2.ddns.net"; "admin3.ddns.net"}
+:local listName "Admins"
+
+#Variable for log messages
+#Log level values: 0 for none, 1 for warning, 2 for all
+:local logLevel 0
+:local logScriptName "DDNSUpdateAddressLists"
+
+:foreach domainName in=$domainNames do={
+    :if ($logLevel >= 2) do={ :log info ($logScriptName . ": execute for domain " .  $domainName)}
+    
+    :local recordCount [/ip firewall address-list print count-only where comment=$domainName and list=$listName]
+    :if ($recordCount > 1) do={
+        :if ($logLevel >= 1) do={ :log error ($logScriptName . ": Multiple Address Lists for record " . $domainName)}
+    } else={
+        :local domainIP [:resolve $domainName]
+        :if ($logLevel >= 2) do={ :log info ($logScriptName . ": " .  $domainName . " -> IP address (" . $domainIP . ")")}
+    
+        :if ($recordCount = 0) do={
+            #Create new
+            /ip firewall address-list add address=$domainIP comment=$domainName list=$listName
+        } else={
+            #Update existing
+            :local record [/ip firewall address-list find where comment=$domainName and list=$listName]
+            :if ([/ip firewall address-list get $record address] != $domainIP) do={
+                /ip firewall address-list set $record address=$domainIP
+            }
+        }
+    }    
+}
+
+:if ($logLevel >= 2) do={ :log info ($logScriptName . ": executed successfully!")}
