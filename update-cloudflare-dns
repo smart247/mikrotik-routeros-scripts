@@ -1,0 +1,25 @@
+###############################################
+# Title:      Update CloudFlare DNS record
+# Author:     Sergej Sevrjuk
+# Date:       2019-10-25
+# Tested on:  6,45
+# How to use: Copy to DHCP Client script
+###############################################
+
+
+###############################################
+#Script Settings
+###############################################
+
+:local cfZoneID "023e105f4ecef8ad9ca31a8372d0c353";
+:local cfRecordID "372e67954025e0ba6aaa6d586b9e0b59";
+:local cfToken "xvK7VhffWTutgFVygrSYjqeiVUnVlR-3T3Vfyops";
+
+:local cfDataType "A";
+:local cfDataName "example.com";
+:local cfDataContent $"lease-address";
+:local cfDataProxied "false";
+
+###############################################
+
+/tool fetch mode=https http-method=put output=none url="https://api.cloudflare.com/client/v4/zones/$cfZoneID/dns_records/$cfRecordID" http-header-field="content-type: application/json,authorization: Bearer $cfToken" http-data="{\"type\":\"$cfDataType\",\"name\":\"$cfDataName\",\"content\":\"$cfDataContent\",\"proxied\":$cfDataProxied}"
